@@ -1,21 +1,26 @@
 package com.example.controller;
 
+
+import javax.security.sasl.AuthenticationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
 import com.example.entity.Message;
-import com.example.exception.AccountAlreadyExistsException;
+
+import com.example.exception.ConflictException;
 import com.example.exception.RequirementNotMetException;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -28,46 +33,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 public class SocialMediaController {
 
+    @Autowired
     private MessageService messageService;
+    @Autowired
     private AccountService accountService;
 
-    @Autowired
-    public SocialMediaController(MessageService MessageService, AccountService AccountService){
-        this.accountService = accountService;
-        this.messageService = messageService;
-    }
-
-    /**
-     * Story 1: Account Registration
-     * 200: Account is registered successfully
-     * 409: Conflict
-     * 400: Client Error
-     * @param requestBody
-     * @return ResponseEntity 
-     * @throws JsonMappingException
-     * @throws JsonProcessingException
-     */
     @PostMapping("/register")
-    public ResponseEntity registerAccount(@RequestBody String requestBody) throws JsonMappingException, JsonProcessingException{
-        ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(requestBody, Account.class);
-        try{
-            accountService.register(account);
-        }
-        catch(AccountAlreadyExistsException e){
-            return ResponseEntity.status(409).body("");
-        }
-        catch(RequirementNotMetException e){
-            return ResponseEntity.status(400).body("");
-        }
-        return ResponseEntity.status(200).body(account);
+    public ResponseEntity register(@RequestBody Account account) throws RequirementNotMetException, ConflictException {
+        accountService.register(account);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    } 
 
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody Account account) throws AuthenticationException {
+        accountService.login(account);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
 
+    @ExceptionHandler(RequirementNotMetException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handlerCredentials(RequirementNotMetException e){return "Requirements not met. "; }
 
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handlerConflict(ConflictException e){return "Username already in use."; }
 
-
-
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public String handlerUnauthorized(AuthenticationException e){return "Unauthorized login."; }
 
 }

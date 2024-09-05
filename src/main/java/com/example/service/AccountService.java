@@ -1,48 +1,38 @@
 package com.example.service;
 
-import javax.naming.AuthenticationException;
+import javax.security.sasl.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.example.entity.Account;
-import com.example.exception.AccountAlreadyExistsException;
+import com.example.exception.ConflictException;
 import com.example.exception.RequirementNotMetException;
 import com.example.repository.AccountRepository;
 
 @Service
 public class AccountService {
 
+    @Autowired
     private AccountRepository accountRepository;
 
-    @Autowired
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
 
-    /**
-     * Story 1: Account Registration
-     * 
-     * @param account
-     */
-    public void register(Account account) throws RequirementNotMetException, AccountAlreadyExistsException {
-        if ((account.getUsername().isEmpty()) || (account.getPassword().length() < 4)) {
-            throw new RequirementNotMetException();
+    public void register(Account account) throws RequirementNotMetException, ConflictException {
+        if (accountRepository.findByUsername(account.getUsername()) != null){
+            throw new ConflictException();
         }
-        if (accountRepository.findByUsername(account.getUsername()) != null) {
-            throw new AccountAlreadyExistsException();
+        if ( (account.getUsername().isEmpty()) || (account.getPassword().length() < 4) ){
+            throw new RequirementNotMetException();
         }
         accountRepository.save(account);
     }
 
-    /**
-     * Story 2: Account Login
-     * @param account
-     * @throws AuthenticationException Account is not found or Password incorrect
-     */
-    public void login(Account account) throws AuthenticationException {
-        if (accountRepository.findByUsernameAndPassword(account.getUsername(), account.getPassword()) == null) {
+    public void login(Account account) throws AuthenticationException { 
+        if (accountRepository.findByUsernameAndPassword(account.getUsername(), account.getPassword()) == null){
             throw new AuthenticationException();
         }
     }
+
+
 
 }
