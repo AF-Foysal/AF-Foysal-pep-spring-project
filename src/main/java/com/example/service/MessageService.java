@@ -27,4 +27,13 @@ public class MessageService {
         return messageRepository.findAll();
     }
 
+    public Message getMessageByID(Integer message_id){
+        if (messageRepository.existsById(message_id)){
+            return messageRepository.getById(message_id);
+        }
+        else{
+            return new Message();
+        }
+    }
+
 }
