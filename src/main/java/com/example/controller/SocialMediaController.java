@@ -1,12 +1,15 @@
 package com.example.controller;
 
 
+import java.util.List;
+
 import javax.security.sasl.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -59,6 +62,11 @@ public class SocialMediaController {
         }
         Message savedMessage = messageService.createMessage(message);
         return ResponseEntity.status(HttpStatus.OK).body(savedMessage);
+    }
+
+    @GetMapping("/messages")
+    public ResponseEntity<List<Message>> getAllMessages(){
+        return ResponseEntity.status(HttpStatus.OK).body(messageService.getAllMessages());
     }
 
     
