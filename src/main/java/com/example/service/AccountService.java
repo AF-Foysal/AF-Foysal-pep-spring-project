@@ -17,20 +17,33 @@ public class AccountService {
     private AccountRepository accountRepository;
 
 
-    public void register(Account account) throws RequirementNotMetException, ConflictException {
+    public Account register(Account account) throws RequirementNotMetException, ConflictException {
         if (accountRepository.findByUsername(account.getUsername()) != null){
             throw new ConflictException();
         }
         if ( (account.getUsername().isEmpty()) || (account.getPassword().length() < 4) ){
             throw new RequirementNotMetException();
         }
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 
     public void login(Account account) throws AuthenticationException { 
         if (accountRepository.findByUsernameAndPassword(account.getUsername(), account.getPassword()) == null){
             throw new AuthenticationException();
         }
+    }
+
+
+    /*
+     * Utility Functions
+     */
+
+    public Account findAccount(Account account){
+        return accountRepository.findByUsername(account.getUsername());
+    }
+
+    public boolean existsByID(Integer account_id){
+        return accountRepository.existsById(account_id);
     }
 
 

@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
 import com.example.entity.Message;
-
+import com.example.exception.AccountNonexistent;
 import com.example.exception.ConflictException;
+import com.example.exception.MTException;
 import com.example.exception.RequirementNotMetException;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
@@ -39,16 +40,28 @@ public class SocialMediaController {
     private AccountService accountService;
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody Account account) throws RequirementNotMetException, ConflictException {
-        accountService.register(account);
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public ResponseEntity<Account> register(@RequestBody Account account) throws RequirementNotMetException, ConflictException {
+        Account successfulAccount = accountService.register(account);
+        return ResponseEntity.status(HttpStatus.OK).body(successfulAccount);
     } 
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody Account account) throws AuthenticationException {
+    public ResponseEntity<Account> login(@RequestBody Account account) throws AuthenticationException {
         accountService.login(account);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        Account successfulAccount = accountService.findAccount(account);
+        return ResponseEntity.status(HttpStatus.OK).body(successfulAccount);
     }
+
+    @PostMapping("/messages")
+    public ResponseEntity<Message> createMessage(@RequestBody Message message) throws MTException, AccountNonexistent {
+        if (!accountService.existsByID(message.getPostedBy())){
+            throw new AccountNonexistent();
+        }
+        Message savedMessage = messageService.createMessage(message);
+        return ResponseEntity.status(HttpStatus.OK).body(savedMessage);
+    }
+
+    
 
 
     @ExceptionHandler(RequirementNotMetException.class)
@@ -57,10 +70,18 @@ public class SocialMediaController {
 
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public String handlerConflict(ConflictException e){return "Username already in use."; }
+    public String handlerConflict(ConflictException e){return "Username already in use. "; }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public String handlerUnauthorized(AuthenticationException e){return "Unauthorized login."; }
+    public String handlerUnauthorized(AuthenticationException e){return "Unauthorized login. "; }
+
+    @ExceptionHandler(MTException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleMessageError(MTException e){return "Message must NOT be over 255 characters NOR blank. "; }
+
+    @ExceptionHandler(AccountNonexistent.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleMessageError(AccountNonexistent e){return "Account does NOT exist. "; }
 
 }
