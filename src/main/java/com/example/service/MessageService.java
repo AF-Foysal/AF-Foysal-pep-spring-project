@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.entity.Message;
+import com.example.exception.MTException;
 import com.example.repository.MessageRepository;
 
 public class MessageService {
@@ -22,10 +23,11 @@ public class MessageService {
      * MessageText Length must NOT be Blank nor Greater than 255
      * @param message
      */
-    public void createMessage(Message message){
-        if ((!message.getMessageText().isEmpty()) || (message.getMessageText().length() <= 255)){
-            messageRepository.save(message);
+    public void createMessage(Message message) throws MTException{
+        if ((message.getMessageText().isEmpty()) && (message.getMessageText().length() > 255)){
+            throw new MTException();
         }
+        messageRepository.save(message);
     }
 
     /**
@@ -58,12 +60,13 @@ public class MessageService {
      * @param message_id
      * @param message_text
      */
-    public void updateMessageText(int message_id, String message_text){
-        if ((messageRepository.existsById(message_id)) && (message_text.length() > 0) && (message_text.length() <= 255)){
-            Message message = messageRepository.getById(message_id);
-            message.setMessageText(message_text);
-            messageRepository.save(message);
+    public void updateMessageText(int message_id, String message_text) throws MTException{
+        if (!messageRepository.existsById(message_id)  || (message_text.isEmpty()) || (message_text.length() > 255)){
+            throw new MTException();
         }
+        Message message = messageRepository.getById(message_id);
+        message.setMessageText(message_text);
+        messageRepository.save(message);
     }
 
     /**
