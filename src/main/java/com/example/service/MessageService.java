@@ -9,6 +9,7 @@ import com.example.entity.Message;
 import com.example.exception.MTException;
 import com.example.repository.MessageRepository;
 
+@Service
 public class MessageService {
 
     private MessageRepository messageRepository;

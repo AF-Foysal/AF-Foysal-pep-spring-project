@@ -9,6 +9,7 @@ import com.example.exception.AccountAlreadyExistsException;
 import com.example.exception.RequirementNotMetException;
 import com.example.repository.AccountRepository;
 
+@Service
 public class AccountService {
 
     private AccountRepository accountRepository;
