@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
 import com.example.entity.Message;
-import com.example.exception.AccountNonexistentException;
+import com.example.exception.AccountNotFoundException;
 import com.example.exception.ConflictException;
 import com.example.exception.MTException;
 import com.example.exception.RequirementNotMetException;
-import com.example.exception.ResourceNonexistentException;
+import com.example.exception.ResourceNotFoundException;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
 
@@ -61,9 +61,9 @@ public class SocialMediaController {
     }
 
     @PostMapping("/messages")
-    public ResponseEntity<Message> createMessage(@RequestBody Message message) throws MTException, AccountNonexistentException {
+    public ResponseEntity<Message> createMessage(@RequestBody Message message) throws MTException, AccountNotFoundException {
         if (!accountService.existsByID(message.getPostedBy())){
-            throw new AccountNonexistentException();
+            throw new AccountNotFoundException();
         }
         Message savedMessage = messageService.createMessage(message);
         return ResponseEntity.status(HttpStatus.OK).body(savedMessage);
@@ -94,7 +94,7 @@ public class SocialMediaController {
     }
 
     @PatchMapping("/messages/{message_id}")
-    public ResponseEntity<String> updateMessage(@PathVariable Integer message_id, @RequestBody Message message) throws MTException, ResourceNonexistentException{
+    public ResponseEntity<String> updateMessage(@PathVariable Integer message_id, @RequestBody Message message) throws MTException, ResourceNotFoundException{
         String messageText = message.getMessageText();
         Message updatedMessage = messageService.updateMessage(message_id, messageText);
         return ResponseEntity.status(HttpStatus.OK).body(updatedMessage.toString());
@@ -117,12 +117,12 @@ public class SocialMediaController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleMessageError(MTException e){return "Message must NOT be over 255 characters NOR blank. "; }
 
-    @ExceptionHandler(AccountNonexistentException.class)
+    @ExceptionHandler(AccountNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleMessageError(AccountNonexistentException e){return "Account does NOT exist. "; }
+    public String handleMessageError(AccountNotFoundException e){return "Account does NOT exist. "; }
 
-    @ExceptionHandler(ResourceNonexistentException.class)
+    @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleResourceNonexistent(ResourceNonexistentException e){return "Message does NOT exist. "; }
+    public String handleResourceNonexistent(ResourceNotFoundException e){return "Message does NOT exist. "; }
 
 }

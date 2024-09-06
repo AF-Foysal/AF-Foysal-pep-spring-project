@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.entity.Message;
 import com.example.exception.MTException;
-import com.example.exception.ResourceNonexistentException;
+import com.example.exception.ResourceNotFoundException;
 import com.example.repository.MessageRepository;
 
 @Service
@@ -40,11 +40,11 @@ public class MessageService {
         return messageRepository.findAllByPostedBy(postedBy);
     }
 
-    public Message updateMessage(Integer messageId, String messageText) throws MTException, ResourceNonexistentException {
+    public Message updateMessage(Integer messageId, String messageText) throws MTException, ResourceNotFoundException {
         if ( (messageText.isEmpty()) || (messageText.length() > 255 )){
             throw new MTException();
         }
-        Message message = messageRepository.findById(messageId).orElseThrow(() -> new ResourceNonexistentException() );
+        Message message = messageRepository.findById(messageId).orElseThrow(() -> new ResourceNotFoundException() );
         message.setMessageText(messageText);
         return messageRepository.save(message);
     }
