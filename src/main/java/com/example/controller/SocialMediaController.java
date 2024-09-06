@@ -94,10 +94,10 @@ public class SocialMediaController {
     }
 
     @PatchMapping("/messages/{message_id}")
-    public ResponseEntity<String> updateMessage(@PathVariable Integer message_id, @RequestBody Message message) throws MTException, ResourceNotFoundException{
+    public ResponseEntity<Integer> updateMessage(@PathVariable Integer message_id, @RequestBody Message message) throws MTException, ResourceNotFoundException{
         String messageText = message.getMessageText();
-        Message updatedMessage = messageService.updateMessage(message_id, messageText);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedMessage.toString());
+        messageService.updateMessage(message_id, messageText);
+        return ResponseEntity.status(HttpStatus.OK).body(1);
     }
     
 
