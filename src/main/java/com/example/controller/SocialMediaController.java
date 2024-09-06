@@ -8,20 +8,24 @@ import javax.security.sasl.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
 import com.example.entity.Message;
-import com.example.exception.AccountNonexistent;
+import com.example.exception.AccountNonexistentException;
 import com.example.exception.ConflictException;
 import com.example.exception.MTException;
 import com.example.exception.RequirementNotMetException;
+import com.example.exception.ResourceNonexistentException;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
 
@@ -57,9 +61,9 @@ public class SocialMediaController {
     }
 
     @PostMapping("/messages")
-    public ResponseEntity<Message> createMessage(@RequestBody Message message) throws MTException, AccountNonexistent {
+    public ResponseEntity<Message> createMessage(@RequestBody Message message) throws MTException, AccountNonexistentException {
         if (!accountService.existsByID(message.getPostedBy())){
-            throw new AccountNonexistent();
+            throw new AccountNonexistentException();
         }
         Message savedMessage = messageService.createMessage(message);
         return ResponseEntity.status(HttpStatus.OK).body(savedMessage);
@@ -75,8 +79,27 @@ public class SocialMediaController {
         return ResponseEntity.status(HttpStatus.OK).body(messageService.getMessageByID(message_id));
     }
 
-    
+    @DeleteMapping("/messages/{message_id}")
+    public ResponseEntity<Integer> deleteMessageByID(@PathVariable Integer message_id){
+        if (messageService.deleteByMessageID(message_id) == 1){
+            return ResponseEntity.status(HttpStatus.OK).body(1);
+        }
+        return ResponseEntity.status(HttpStatus.OK).build();
+       
+    }
 
+    @GetMapping("/accounts/{account_id}/messages")
+    public ResponseEntity<List<Message>> getAllMessagesByPostedBy(@PathVariable Integer account_id){
+        return ResponseEntity.status(HttpStatus.OK).body(messageService.getAllMessagesByPostedBy(account_id));
+    }
+
+    @PatchMapping("/messages/{message_id}")
+    public ResponseEntity<String> updateMessage(@PathVariable Integer message_id, @RequestBody Message message) throws MTException, ResourceNonexistentException{
+        String messageText = message.getMessageText();
+        Message updatedMessage = messageService.updateMessage(message_id, messageText);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedMessage.toString());
+    }
+    
 
     @ExceptionHandler(RequirementNotMetException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -94,8 +117,12 @@ public class SocialMediaController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleMessageError(MTException e){return "Message must NOT be over 255 characters NOR blank. "; }
 
-    @ExceptionHandler(AccountNonexistent.class)
+    @ExceptionHandler(AccountNonexistentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleMessageError(AccountNonexistent e){return "Account does NOT exist. "; }
+    public String handleMessageError(AccountNonexistentException e){return "Account does NOT exist. "; }
+
+    @ExceptionHandler(ResourceNonexistentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleResourceNonexistent(ResourceNonexistentException e){return "Message does NOT exist. "; }
 
 }
